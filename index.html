@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PTED 进食态度类型指标</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  /* Morandi palette */
+  :root {
+    --bg: #eaf0e6;
+    --bg-card: #f4f8f2;
+    --border: rgba(0,0,0,0.05);
+    --text: #3d4439;
+    --text-soft: #6b7566;
+    --text-muted: #8d9a88;
+    --text-dim: #aab5a5;
+    --rose: #d4a5a5;
+    --rose-light: #e8c8c8;
+    --sage: #a3b5a3;
+    --sage-light: #c8d4c8;
+    --clay: #c4a882;
+    --clay-light: #ddd0bc;
+    --mauve: #b8a8c4;
+    --mauve-light: #d4c8dc;
+    --slate: #8fa8b8;
+    --slate-light: #bcccd8;
+  }
+
+  body {
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    font-size: 17px;
+    min-height:100vh;
+    background: var(--bg);
+    display:flex; justify-content:center; align-items:center;
+    overflow-x:hidden;
+  }
+
+  /* Soft Morandi gradient orbs */
+  .bg-orb {
+    position:fixed; width:100vw; height:100vh;
+    top:0; left:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(ellipse 70% 60% at 15% 25%, rgba(163,181,163,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 85% 70%, rgba(212,165,165,0.1) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 40% at 50% 90%, rgba(196,168,130,0.08) 0%, transparent 50%);
+  }
+
+  .container { position:relative; z-index:1; width:100%; max-width:680px; padding:20px; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 28px; padding: 40px 36px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.04);
+  }
+  @media(max-width:480px){
+    .card{padding:24px 18px; border-radius:20px}
+    .container{padding:12px}
+  }
+
+  /* Progress */
+  .progress-track {
+    width:100%; height:4px;
+    background: rgba(0,0,0,0.04);
+    border-radius:4px; margin-bottom:20px; overflow:hidden;
+  }
+  .progress-fill {
+    height:100%; width:0%;
+    background: linear-gradient(90deg, var(--rose), var(--clay));
+    border-radius:4px;
+    transition:width 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .progress-label {
+    display:flex; justify-content:space-between;
+    color: var(--text-dim);
+    font-size:12px; font-weight:500; margin-top:6px;
+  }
+
+  .screen { display:none; animation:fadeUp 0.4s cubic-bezier(0.16,1,0.3,1); }
+  .screen.active { display:block; }
+  @keyframes fadeUp {
+    from{opacity:0;transform:translateY(14px)}
+    to{opacity:1;transform:translateY(0)}
+  }
+
+  /* Welcome */
+  #welcome { text-align:center; }
+  .logo {
+    width:72px; height:72px; margin:0 auto 24px;
+    background: linear-gradient(135deg, var(--rose-light), var(--mauve-light));
+    border-radius:20px; display:flex; align-items:center; justify-content:center;
+    font-size:32px;
+  }
+  h1 {
+    font-size:30px; font-weight:800; color: var(--text);
+    letter-spacing:-0.5px; margin-bottom:6px;
+  }
+  h1 span { color: var(--rose); }
+  .sub {
+    color: var(--text-soft); font-size:14px; line-height:1.6;
+    margin:0 auto 24px; max-width:460px;
+  }
+  .info-row {
+    display:flex; justify-content:center; gap:16px; margin-bottom:28px; flex-wrap:wrap;
+  }
+  .info-badge {
+    display:flex; align-items:center; gap:6px;
+    font-size:13px; color: var(--text-muted);
+  }
+  .dims-preview {
+    display:flex; justify-content:center; gap:8px; margin-bottom:28px; flex-wrap:wrap;
+  }
+  .dim-block {
+    background: rgba(0,0,0,0.02); border:1px solid var(--border);
+    border-radius:10px; padding:10px 14px; text-align:center; min-width:110px;
+  }
+  .dim-block .pair{font-size:15px;font-weight:800;color:var(--text);letter-spacing:1px}
+  .dim-block .label{font-size:9px;font-weight:600;color:var(--text-muted);letter-spacing:0.5px;margin-top:3px}
+  .dim-block .desc{font-size:10px;color:var(--text-dim);margin-top:1px}
+
+  .btn {
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:14px 32px; border:none; border-radius:14px;
+    font-family:inherit; font-size:15px; font-weight:600; cursor:pointer;
+    transition:all 0.2s cubic-bezier(0.16,1,0.3,1);
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--rose), var(--clay));
+    color: #fff; box-shadow:0 4px 16px rgba(212,165,165,0.3);
+    width:100%;
+  }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(212,165,165,0.4); }
+  .btn-ghost {
+    background: rgba(0,0,0,0.03); color: var(--text-soft);
+    border:1px solid var(--border);
+  }
+  .btn-ghost:hover { background: rgba(0,0,0,0.05); color: var(--text); }
+
+  /* Section transition */
+  .sec-card { text-align:center; padding:12px 0 8px; }
+  .sec-card .emoji-big { font-size:48px; margin-bottom:16px; }
+  .sec-card h2 {
+    font-size:22px; font-weight:700; color: var(--text); margin-bottom:8px;
+  }
+  .sec-card .tagline {
+    font-size:14px; color: var(--text-soft); line-height:1.5;
+    max-width:380px; margin:0 auto 20px;
+  }
+
+  /* Question */
+  .q-num {
+    font-size:12px; font-weight:600;
+    color: var(--text-dim); letter-spacing:0.5px; margin-bottom:20px;
+  }
+  .q-text {
+    font-size: 22px; font-weight:600; color: var(--text);
+    line-height:1.45; margin-bottom:28px; min-height:3em;
+  }
+
+  /* Rating */
+  .rating-group { display:flex; gap:10px; justify-content:center; }
+  .rating-btn {
+    flex:1; max-width:110px;
+    display:flex; flex-direction:column; align-items:center;
+    gap:6px; padding:18px 10px 14px;
+    background: rgba(0,0,0,0.02);
+    border:1.5px solid var(--border);
+    border-radius:14px; cursor:pointer;
+    transition:all 0.2s cubic-bezier(0.16,1,0.3,1);
+    font-family:inherit;
+  }
+  .rating-btn .num {
+    font-size: 28px; font-weight:800; color: var(--text-dim);
+    transition:all 0.2s;
+  }
+  .rating-btn .label {
+    font-size: 12px; font-weight:600; color: var(--text-dim);
+    text-align:center; transition:all 0.2s;
+  }
+  }
+  .rating-btn .label {
+    font-size:10px; font-weight:600; color: var(--text-dim);
+    text-align:center; transition:all 0.2s;
+  }
+  .rating-btn.selected {
+    background: rgba(212,165,165,0.08);
+    border-color: var(--rose);
+  }
+  .rating-btn.selected .num { color: var(--rose); }
+  .rating-btn.selected .label { color: var(--rose); }
+
+  /* Results */
+  .res-head { text-align:center; margin-bottom:20px; }
+  .res-code {
+    font-size:42px; font-weight:900; letter-spacing:4px;
+    color: var(--rose);
+  }
+  .res-name { font-size:20px; font-weight:700; color: var(--text); margin:2px 0; }
+  .res-risk {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:4px 14px; border-radius:100px;
+    font-size:12px; font-weight:700; letter-spacing:0.5px; margin-top:6px;
+  }
+  .res-risk.low{background:rgba(163,181,163,0.15);color:#789978;border:1px solid rgba(163,181,163,0.25)}
+  .res-risk.medium{background:rgba(196,168,130,0.15);color:#a88a62;border:1px solid rgba(196,168,130,0.25)}
+  .res-risk.high{background:rgba(212,165,165,0.15);color:#c48888;border:1px solid rgba(212,165,165,0.25)}
+  .res-risk.critical{background:rgba(180,140,140,0.15);color:#b07878;border:1px solid rgba(180,140,140,0.25)}
+
+  .dim-res { margin-bottom:14px; }
+  .dim-res-hd {
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;
+  }
+  .dim-res-lb {
+    font-size:11px; font-weight:700; color: var(--text-muted);
+    letter-spacing:0.3px;
+  }
+  .dim-res-pct { font-size:13px; font-weight:700; color: var(--text); }
+  .dim-bar-track {
+    height:6px; background: rgba(0,0,0,0.04);
+    border-radius:6px; overflow:hidden;
+  }
+  .dim-bar-fill {
+    height:100%; border-radius:6px;
+    transition:width 1s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  .dim-bar-fill.pt{background:linear-gradient(90deg,var(--rose),var(--clay))}
+  .dim-bar-fill.ed{background:linear-gradient(90deg,var(--sage),var(--sage))}
+  .dim-bar-fill.io{background:linear-gradient(90deg,var(--slate),var(--slate))}
+  .dim-bar-fill.fr{background:linear-gradient(90deg,var(--mauve),var(--mauve))}
+  .dim-bar-caps {
+    display:flex; justify-content:space-between;
+    font-size:9px; font-weight:700; color: var(--text-dim);
+    letter-spacing:1px; margin-top:2px;
+  }
+
+  .res-desc {
+    margin-top:18px; padding:18px;
+    background: rgba(0,0,0,0.01);
+    border-radius:14px; border:1px solid var(--border);
+  }
+  .res-desc h3 {
+    font-size:12px; font-weight:700; color: var(--text-muted);
+    letter-spacing:1px; text-transform:uppercase; margin-bottom:8px;
+  }
+  .res-desc p { font-size:13.5px; line-height:1.7; color: var(--text-soft); }
+
+  .warnings { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+  .warn {
+    padding:12px 14px; border-radius:12px;
+    font-size:13px; line-height:1.5; display:flex; gap:10px; align-items:flex-start;
+  }
+  .warn.ideal{background:rgba(196,168,130,0.08);border:1px solid rgba(196,168,130,0.15);color:var(--text-soft)}
+  .warn.danger{background:rgba(212,165,165,0.08);border:1px solid rgba(212,165,165,0.15);color:var(--text-soft)}
+
+  .res-actions { display:flex; gap:10px; margin-top:18px; }
+  .res-actions .btn { flex:1; }
+  @media(max-width:480px){.res-actions{flex-direction:column}}
+
+  #alltypes .grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:6px;
+    max-height:55vh; overflow-y:auto; padding-right:4px;
+  }
+  #alltypes .grid::-webkit-scrollbar{width:4px}
+  #alltypes .grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+  .ty-card {
+    background: rgba(0,0,0,0.01);
+    border:1px solid var(--border);
+    border-radius:10px; padding:10px 12px;
+    cursor:pointer; transition:all 0.2s;
+  }
+  .ty-card:hover{background:rgba(212,165,165,0.04);border-color:var(--rose-light)}
+  .ty-card .code{font-size:14px;font-weight:800;color:var(--text);letter-spacing:1px}
+  .ty-card .cname{font-size:11px;color:var(--text-muted);margin-top:1px}
+  .tdot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:6px}
+  .tdot.green{background:#a3b5a3}
+  .tdot.yellow{background:#c4a882}
+  .tdot.orange{background:#d4a5a5}
+  .tdot.red{background:#b07878}
+</style>
+</head>
+<body>
+<div class="bg-orb"></div>
+<div class="container">
+<div class="card">
+
+<!-- Progress -->
+<div class="progress-track">
+  <div class="progress-fill" id="progressFill"></div>
+</div>
+<div class="progress-label">
+  <span id="progressText">准备开始</span>
+  <span id="progressCount">0 / 35</span>
+</div>
+
+<!-- ===== WELCOME ===== -->
+<div class="screen active" id="welcome">
+  <div class="logo">🍽</div>
+  <h1><span>PTED</span> 进食态度类型</h1>
+  <p class="sub">
+    从四个维度发现你与食物之间独特的相处方式。<br>
+    共 35 题，约 6–8 分钟。
+  </p>
+  <div class="info-row">
+    <span class="info-badge">📋 35 题</span>
+    <span class="info-badge">⏱ 6-8 分钟</span>
+    <span class="info-badge">🎯 16 种类型</span>
+  </div>
+  <div class="dims-preview">
+    <div class="dim-block"><div class="pair">P / T</div><div class="label">进食动机</div><div class="desc">为什么开始吃</div></div>
+    <div class="dim-block"><div class="pair">E / D</div><div class="label">进食感知</div><div class="desc">如何认识食物</div></div>
+    <div class="dim-block"><div class="pair">I / O</div><div class="label">停止信号</div><div class="desc">为什么停下来</div></div>
+    <div class="dim-block"><div class="pair">F / R</div><div class="label">后反应</div><div class="desc">吃完怎么想</div></div>
+  </div>
+  <button class="btn btn-primary" onclick="nextStep()">开始测试 →</button>
+</div>
+
+<!-- ===== SECTION / QUESTION (dynamic) ===== -->
+<div class="screen" id="section">
+  <div class="sec-card">
+    <div class="emoji-big" id="secEmoji"></div>
+    <h2 id="secTitle"></h2>
+    <p class="tagline" id="secTagline"></p>
+    <button class="btn btn-primary" onclick="nextStep()" style="max-width:280px;margin:0 auto">继续 →</button>
+  </div>
+</div>
+
+<div class="screen" id="question">
+  <div class="q-num" id="qNum"></div>
+  <div class="q-text" id="qText"></div>
+  <div class="rating-group" id="ratingGroup"></div>
+</div>
+
+<!-- ===== RESULT ===== -->
+<div class="screen" id="result">
+  <div class="res-head">
+    <div class="res-code" id="rCode">PEIF</div>
+    <div class="res-name" id="rName">水手</div>
+    <div class="res-risk" id="rRisk">🟢 极低</div>
+  </div>
+  <div id="dimBars"></div>
+  <div class="res-desc" id="resDesc"></div>
+  <div class="warnings" id="warnings"></div>
+  <div class="res-actions">
+    <button class="btn btn-ghost" onclick="showAll()">探索全部类型</button>
+    <button class="btn btn-primary" onclick="restart()" style="width:auto">重新测试</button>
+  </div>
+</div>
+
+<!-- ===== ALL TYPES ===== -->
+<div class="screen" id="alltypes">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <h2 style="font-size:17px;font-weight:700;color:var(--text)">16 种进食类型</h2>
+    <button class="btn btn-ghost" onclick="showRes()" style="padding:8px 16px;font-size:12px">← 返回</button>
+  </div>
+  <div class="grid" id="allGrid"></div>
+</div>
+
+</div>
+</div>
+
+<script>
+const labels = ['完全不符','不太符合','有时符合','比较符合','完全符合'];
+
+const sections = [
+  { emoji:'🧭', title:'你为什么会开始吃？', tagline:'同样是走向食物，有人是身体在召唤，有人是心在牵引。',
+    qs:[
+      {id:'P1',d:'P',r:0,t:'我能清楚地感觉到身体的饥饿信号——胃空了、没力气了，自然就知道该吃东西了。'},
+      {id:'P2',d:'P',r:0,t:'活动量大的日子我会多吃，活动量少的日子自然吃得少——身体会自动调节。'},
+      {id:'P3',d:'P',r:0,t:'不饿的时候，我很少会主动想到吃东西这件事。'},
+      {id:'P4',d:'P',r:1,t:'有时候即使肚子不饿，我也会因为别的原因走向食物。'},
+      {id:'T1',d:'T',r:0,t:'心情不太好的时候，吃点东西总能让我感觉好受一点。'},
+      {id:'T2',d:'T',r:0,t:'空闲下来不知道做什么的时候，吃东西是一件很自然的事情。'},
+      {id:'T3',d:'T',r:0,t:'有时候我会突然特别想吃某样东西，不吃到就觉得不满足。'},
+      {id:'T4',d:'T',r:1,t:'大部分时候，我是真的饿了才会想吃东西。'},
+    ]},
+  { emoji:'👁', title:'你眼中的食物是什么样的？', tagline:'有人看到味道和记忆，有人看到成分和数字。',
+    qs:[
+      {id:'E1',d:'E',r:0,t:'闻到食物的香气、看到诱人的画面，我会由衷地觉得这是一种享受。'},
+      {id:'E2',d:'E',r:0,t:'食物对我来说不只是填饱肚子——它联系着某些记忆、某些人和某些时刻。'},
+      {id:'E3',d:'E',r:0,t:'慢慢品尝食物带来的愉悦，是我生活中很重要的一部分。'},
+      {id:'E4',d:'E',r:1,t:'我很少去品味食物的细节——对我来说食物主要的作用就是提供能量。'},
+      {id:'D1',d:'D',r:0,t:'选食物的时候，我脑子里先出现的是它的营养成分，而不是味道。'},
+      {id:'D2',d:'D',r:0,t:'为了健康或身材目标，我可以长期吃营养配比完美但味道一般的食物。'},
+      {id:'D3',d:'D',r:0,t:'吃饭对我来说更像一项需要管理的任务，而不是放松享受的过程。'},
+      {id:'D4',d:'D',r:1,t:'我很少去计算食物的卡路里或营养，更关心它好不好吃。'},
+    ]},
+  { emoji:'🛑', title:'你什么时候停下来？', tagline:'有人听身体的声音，有人听盘子的声音。',
+    qs:[
+      {id:'I1',d:'I',r:0,t:'吃到差不多饱了，我的身体会自然地告诉我"可以了"，我通常相信这个感觉。'},
+      {id:'I2',d:'I',r:0,t:'即使面前还有几口喜欢的菜，感觉饱了我也能从容地放下筷子。'},
+      {id:'I3',d:'I',r:1,t:'我不太能分辨"还没饱"、"刚刚好"和"吃撑了"之间的区别。'},
+      {id:'O1',d:'O',r:0,t:'只要东西还没吃完，我就觉得"还是吃完吧"。'},
+      {id:'O2',d:'O',r:0,t:'"别浪费"这三个字，常常让我把食物吃完，即使已经不太饿了。'},
+      {id:'O3',d:'O',r:1,t:'为了身体舒服，我可以坦然剩下一些食物，即使没吃完。'},
+    ]},
+  { emoji:'💭', title:'吃完之后，你在想什么？', tagline:'有人吃完就翻篇，有人会默默在心里复盘。',
+    qs:[
+      {id:'F1',d:'F',r:0,t:'吃完了就吃完了——我不会特意去想刚才吃了什么、吃了多少。'},
+      {id:'F2',d:'F',r:0,t:'偶尔吃多了我不会分析原因——可能就是那顿比较开心，没什么大不了的。'},
+      {id:'F3',d:'F',r:1,t:'吃完饭后，我常常会在心里复盘：今天吃得好不好、有没有需要调整的地方。'},
+      {id:'R1',d:'R',r:0,t:'我有一套自己的标准来判断今天吃得好不好——营养是否均衡、量是否合适。'},
+      {id:'R2',d:'R',r:0,t:'给自己设定饮食目标并追踪进度，这让我觉得踏实。'},
+      {id:'R3',d:'R',r:0,t:'越是告诉自己某种食物"不能吃"，我反而越惦记它。'},
+      {id:'R4',d:'R',r:1,t:'我很少分析自己的饮食习惯——吃就吃了，不太去想。'},
+    ]},
+  { emoji:'🔍', title:'最后几道快速检核', tagline:'如实回答就好，这些问题没有对错。',
+    qs:[
+      {id:'V1',d:'V',r:0,t:'我从未因为情绪不好而比平时多吃一口。'},
+      {id:'V2',d:'V',r:0,t:'我对自己的身材和体重没有任何在意，从不关注。'},
+      {id:'L1',d:'L',r:0,t:'有时候一旦开始吃某种食物，就好像停不下来，即使胃已经在说不舒服了。'},
+      {id:'S1',d:'S',r:0,t:'深夜独处的时候，食物总是特别有吸引力。'},
+      {id:'S2',d:'S',r:0,t:'工作或学业压力大的时候，我的食量会不知不觉增加。'},
+      {id:'S3',d:'S',r:0,t:'社交聚餐中，我会跟着别人的节奏，不知不觉吃下远超自己需要的量。'},
+      {id:'S4',d:'S',r:0,t:'刷到美食视频或者到面包店的香气时，经常会产生"现在就要吃到"的冲动。'},
+    ]}
+];
+
+// Build step sequence
+let steps = [];
+sections.forEach((s,si)=>{steps.push({t:'sec',i:si}); s.qs.forEach((q,qi)=>{steps.push({t:'q',si,qi});});});
+let cur=0, ans={};
+
+function nextStep(){
+  cur++;
+  if(cur>=steps.length){showRes();return;}
+  render();
+}
+
+function render(){
+  const s=steps[cur];
+  const tot=steps.filter(x=>x.t==='q').length;
+  const done=steps.slice(0,cur).filter(x=>x.t==='q').length;
+  document.getElementById('progressFill').style.width=(done/tot*100)+'%';
+  document.getElementById('progressText').textContent=done<tot?`进度 ${done}/${tot}`:'完成！';
+  document.getElementById('progressCount').textContent=`${done} / ${tot}`;
+
+  if(s.t==='sec'){
+    const sec=sections[s.i];
+    document.getElementById('secEmoji').textContent=sec.emoji;
+    document.getElementById('secTitle').textContent=sec.title;
+    document.getElementById('secTagline').textContent=sec.tagline;
+    showScr('section');
+  }else{
+    const q=sections[s.si].qs[s.qi];
+    const idx=steps.filter(x=>x.t==='q').indexOf(s)+1;
+    document.getElementById('qNum').textContent=`问题 ${idx} / ${tot}`;
+    document.getElementById('qText').textContent=q.t;
+    const c=document.getElementById('ratingGroup'); c.innerHTML='';
+    const sel=ans[q.id];
+    for(let i=1;i<=5;i++){
+      const b=document.createElement('button');
+      b.className='rating-btn'+(sel===i?' selected':'');
+      b.innerHTML=`<span class="num">${i}</span><span class="label">${labels[i-1]}</span>`;
+      b.onclick=()=>{
+        document.querySelectorAll('.rating-btn').forEach(x=>x.classList.remove('selected'));
+        b.classList.add('selected'); ans[q.id]=i;
+        setTimeout(nextStep,350);
+      };
+      c.appendChild(b);
+    }
+    showScr('question');
+  }
+}
+
+function showScr(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+
+// Types
+const types={
+'PEIF':{n:'水手',r:'low',rl:'🟢 极低',d:'你与食物的关系，像水手与大海——靠本能判断风向，信任身体的导航。饿了就吃，饱了就停，这种对身体的信任是你的底层代码。你不太会被情绪或环境推着去吃东西，也不会在吃完后反复琢磨。食物在你生活中有一个清晰而简单的位置：它是航行所需的燃料，仅此而已。你的挑战可能是：有时候过于信任身体信号，而忽略了情绪可能正在悄悄影响你的进食。偶尔停下来问问自己："我是真的饿了，还是心里有点什么需要被看见？"'},
+'PEIR':{n:'钟表匠',r:'medium',rl:'🟡 中',d:'你像钟表匠对待精密的机芯一样对待自己的身体。你信任身体的信号来启动和停止进食，但和其他P型不同的是，你吃完后会复盘——今天吃得好不好、量是否合适。这种复盘不是焦虑，而是一种追求精准的内在倾向。你希望身体的需求和实际的进食之间，像齿轮一样严丝合缝。你的优势是既有本能的信任，又有理性的校准。你的挑战是：复盘有时候会悄悄变成苛责。记住，身体不是机器，偶尔的偏差也是运转的一部分。'},
+'PEOF':{n:'农夫',r:'medium',rl:'🟡 中',d:'你和食物的关系，像农夫与土地——踏实、务实、知足。你只在身体需要的时候才走向食物，有什么吃什么，不挑拣。你停下来的理由往往很实际：盘子空了、东西吃完了。你不太会为此纠结，吃完了就继续去做该做的事。你的进食风格朴素而高效。你享受食物，但不沉迷；你不浪费，也不勉强自己。这是一种难得的平衡。你的挑战可能是：有时候"光盘"成了自动化的习惯，身体可能已经够了，但盘子还没空。偶尔问自己一句："我是胃饱了，还是盘子空了？"'},
+'PEOR':{n:'建筑师',r:'high',rl:'🟠 高',d:'你对待进食像建筑师对待一栋建筑——有蓝图、有规划、有验收标准。你饿了才吃，但停下来的理由往往来自外部：盘子空了、吃完了。吃完后，你会在心里复盘这次进食是否"达标"。你有一套自己的标准，虽然不一定写下来，但它一直在那里。你的优势是既有身体的诚实，又有做事的条理。你的挑战是：当蓝图太严格的时候，进食的愉悦可能会被悄悄牺牲。偶尔问问自己："这个标准是在服务我，还是在束缚我？"'},
+'PDIF':{n:'飞行员',r:'medium',rl:'🟡 中',d:'你像飞行员一样，依赖仪表盘（营养数据）来做飞行决策，但同时信任身体的平衡感。你选食物的时候会考虑成分和营养，但你不会被数据绑架——饱了就是饱了，你会信任这个信号停下来。吃完后，你也不太会反复想。这是一种难得的平衡：既有理性的数据意识，又有身体的直觉信任。你在"管理健康"和"享受食物"之间找到了自己的航线。'},
+'PDIR':{n:'调度员',r:'high',rl:'🟠 高',d:'你像调度员一样，精确管理每一笔能量资源的进出。你用数据来做进食决策，信任身体的信号来停止，但吃完后你会复盘——这份调度日志是否最优？有没有可以改进的地方？你的优势是极高的自我管理能力。你的挑战是：复盘有时候会变成反复琢磨，而反复琢磨可能会悄悄偷走进食本该有的轻松。记住，不是每一顿饭都需要被优化。'},
+'PDOF':{n:'长途司机',r:'medium',rl:'🟡 中',d:'你像长途司机一样，按需加油，加完了继续赶路。你饿了才吃，根据营养成分来选择食物，吃完了就停——停的理由往往是实际的（盘子空了、吃完了），而不是身体的微妙信号。但你不太为此纠结，吃完了就翻篇，继续向前。你的进食风格务实、高效、不内耗。食物是旅途中的补给站，不是目的地本身。你的挑战可能是：有时候身体的饱腹信号和盘子的空满之间有落差，你可能会选择相信盘子。偶尔练习一下在盘子空之前问自己："我还需要吗？"'},
+'PDOR':{n:'工程师',r:'critical',rl:'🔴 极高',d:'你对待进食像工程师对待一套精密系统。数据驱动、规则执行、外部信号停止、严格复盘——这一切在你的进食世界里高效运转。你有清晰的标准，知道自己该吃什么、该吃多少、什么时候该停，吃完后会评估系统运行是否达标。你的优势是极强的掌控感和执行力。你的挑战是：当系统太精密的时候，身体的直觉和进食的愉悦可能会被边缘化。偶尔问问自己："这套系统是在服务我的健康，还是在消耗我的注意力？"'},
+'TEIF':{n:'美食家',r:'medium',rl:'🟡 中',d:'你容易被美好的味道、诱人的场景、温暖的氛围触发而走向食物。但一旦开始吃，你是全然在场的——你专注品尝、享受每一口的细节。你信任身体的信号来停止，吃完后也不纠结。你的进食风格充满了感官的愉悦和对生活的热爱。食物对你来说不只是燃料，它是一种值得被认真对待的体验。你的优势是既有触发的敏感，又有享受的专注。你的挑战是：有时候触发太频繁了，身体可能并不需要那么多。偶尔问自己："我是被吸引，还是真的饿了？"'},
+'TEIR':{n:'诗人',r:'high',rl:'🟠 高',d:'你被情绪和场景打动而走向食物，吃的时候专注品味每一个细节——食物的味道、当下的心情、场景的意味。但和其他T型不同的是，你吃完后会反复咀嚼这些感受。这种复盘不是冷冰冰的数据分析，而是情绪的回味——你会想"那顿饭真好"，或者"我是不是吃多了"。你在感性的享受和理性的反思之间来回踱步。你的优势是能够从食物中体验丰富的情感层次。你的挑战是：回味有时候会变成反复琢磨，而琢磨可能会悄悄消解本该留存的愉悦。'},
+'TEOF':{n:'聚会主人',r:'medium',rl:'🟡 中',d:'你常常被社交场景触发而进食——大家在一起，开心就好，跟着节奏吃。你停下来的理由往往是外部的：盘子空了、聚会结束了。但你的心态很放松，吃完了就翻篇。对你来说，食物的社交意义往往大于它的营养意义。你享受的是在一起的感觉，食物是这个感觉的载体。你的优势是轻松、合群、不内耗。你的挑战是：在人群中，你可能会不知不觉吃下超过身体需要的东西。偶尔在聚会中问自己一句："我是和大家在一起开心，还是真的需要这口食物？"'},
+'TEOR':{n:'演员',r:'critical',rl:'🔴 极高',d:'你在社交场合自然地融入"吃"这件事——跟着节奏、完成角色、不突兀。但当场景落幕，你回到独处的时候，复盘开始了。你会回想刚才吃了什么、吃了多少、是不是吃多了。在人群中的轻松和独处时的审视，构成了你进食体验的两面。你的优势是社交中的适应力和合群。你的挑战是：独处时的复盘可能会让你对社交中的进食产生隐隐的焦虑。记住，聚会中的开心和你吃进去的东西是两件事，它们不需要互相审判。'},
+'TDIF':{n:'营养师',r:'medium',rl:'🟡 中',d:'你容易被触发而走向食物——情绪、场景、社交都会推你一把。但一旦面对食物，你的专业模式就开启了：用营养数据做选择，信任身体的信号来停止，吃完后也不纠结。这是一种有趣的组合：感性的触发，理性的执行。你既允许自己被影响，又有能力在关键时刻用数据来导航。你的优势是灵活——不拒绝进食的邀请，但也不放弃自己的标准。你的挑战是：感性和理性之间的切换可能会消耗心理能量。允许自己偶尔哪边都不站，就只是吃。'},
+'TDIR':{n:'侦探',r:'high',rl:'🟠 高',d:'你被线索触发进食——一个情绪、一个场景、一个画面。吃的时候你用数据来分析每一条线索：这个食物含什么、多少热量、是否值得。吃完后，你会反复推敲自己的判断：我吃对了吗？你的进食过程像一场持续的侦查和分析。你有敏锐的觉察力，但也有不小的心理投入。你的优势是对自己的进食有高度的觉察。你的挑战是：持续的分析可能会让你对食物产生一种隐隐的紧张感。偶尔放下放大镜，允许自己只是吃一顿饭，不分析。'},
+'TDOF':{n:'旅行者',r:'high',rl:'🟠 高',d:'你像旅行者一样，走到哪吃到哪。被环境、际遇、情绪推着走，有什么吃什么，吃完了继续下一站。你的停止信号来自外部——盘子空了、场景结束了。但你的心态豁达，不太为吃了什么而纠结。吃了就吃了，明天再说。你的优势是随遇而安、不内耗。你的挑战是：随遇而安有时候可能让你忽略身体的真实需求。偶尔在出发前问自己："我是需要食物，还是需要这趟体验？"'},
+'TDOR':{n:'哨兵',r:'critical',rl:'🔴 极高',d:'你时刻保持警惕。被任何风吹草动触发进食后，你用严格的规则来管理，用复盘来守住防线。你的进食世界里有一套严密的防御系统：标准清晰、执行到位、事后检查。但站岗太久，人也会累。你的优势是极强的自我管控能力。你的挑战是：当防线太紧的时候，进食的愉悦和身体的直觉可能会被牺牲。偶尔离开哨位，允许自己只是一个人——一个需要食物、也值得享受食物的人。'}
+};
+
+function showRes(){
+  showScr('result');
+  const tot=steps.filter(x=>x.t==='q').length;
+  document.getElementById('progressFill').style.width='100%';
+  document.getElementById('progressText').textContent='完成！';
+  document.getElementById('progressCount').textContent=`${tot} / ${tot}`;
+
+  const raw={P:0,T:0,E:0,D:0,I:0,O:0,F:0,R:0},cnt={P:0,T:0,E:0,D:0,I:0,O:0,F:0,R:0};
+  let vs=[],ls=0,r7=0,tt=0,r6=0,ot=0;
+  sections.forEach(s=>{s.qs.forEach(q=>{
+    const v=ans[q.id]; if(!v) return;
+    if(q.d==='V'){vs.push(v);return} if(q.d==='L'){ls=v;return} if(q.d==='S')return;
+    const sc=q.r?(6-v):v;
+    if(raw[q.d]!==undefined){raw[q.d]+=sc;cnt[q.d]++}
+    if(q.id==='R7')r7=v; if(q.id==='R6')r6=v;
+  })});
+  tt=raw.T; ot=raw.O;
+
+  const p={};
+  ['P','T','E','D','I','O','F','R'].forEach(k=>{const mx=cnt[k]*5,mn=cnt[k]*1;p[k]=mx>mn?(raw[k]-mn)/(mx-mn)*100:50});
+
+  const tc=(raw.P>=raw.T?'P':'T')+(raw.E>=raw.D?'E':'D')+(raw.I>=raw.O?'I':'O')+(raw.F>=raw.R?'F':'R');
+  const ti=types[tc]||types['PEIF'];
+  document.getElementById('rCode').textContent=tc;
+  document.getElementById('rName').textContent=ti.n;
+  const re=document.getElementById('rRisk');
+  re.textContent=ti.rl; re.className='res-risk '+ti.r;
+  document.getElementById('resDesc').innerHTML=`<h3>关于 ${tc} — ${ti.n}</h3><p>${ti.d}</p>`;
+
+  document.getElementById('dimBars').innerHTML=[
+    {l:'P · 生理驱动 / T · 触发',a:'P',b:'T',c:'pt'},
+    {l:'E · 具身化 / D · 抽象',a:'E',b:'D',c:'ed'},
+    {l:'I · 内部信号 / O · 外部信号',a:'I',b:'O',c:'io'},
+    {l:'F · 直觉式 / R · 分析式',a:'F',b:'R',c:'fr'},
+  ].map(b=>`<div class="dim-res"><div class="dim-res-hd"><span class="dim-res-lb">${b.l}</span><span class="dim-res-pct">${Math.round(p[b.a])}% / ${Math.round(p[b.b])}%</span></div><div class="dim-bar-track"><div class="dim-bar-fill ${b.c}" style="width:${p[b.b]}%"></div></div><div class="dim-bar-caps"><span>${b.a}</span><span>${b.b}</span></div></div>`).join('');
+
+  let wh='';
+  if(vs.some(v=>v>=4)) wh+=`<div class="warn ideal"><span>⚠️</span><span>你的回答可能存在理想化倾向。进食问题人人都有，诚实面对自己是改变的第一步。</span></div>`;
+  if(ls>=4) wh+=`<div class="warn danger"><span>🔴</span><span><strong>失控警报：</strong>进食失控感（${ls}/5），提示暴食倾向。建议关注自己的进食模式，必要时寻求专业帮助。</span></div>`;
+  if(r7>=4&&tt>=25) wh+=`<div class="warn danger"><span>🔴</span><span><strong>限制-触发循环：</strong>越控制越想吃（R7=${r7}，T总分=${tt}），暴食风险较高。建议尝试放松对饮食的严格控制。</span></div>`;
+  if(r6>=4&&ot>=22) wh+=`<div class="warn danger"><span>🔴</span><span><strong>监控+外部信号：</strong>分析式监控（R6=${r6}）+ 外部信号停止（O总分=${ot}），易陷入过度监控与外因驱动的循环。</span></div>`;
+  if(r6>=4&&tt>=25) wh+=`<div class="warn danger"><span>🔴</span><span><strong>监控+触发：</strong>分析式监控（R6=${r6}）+ 触发式进食（T总分=${tt}），易因触发进食后过度分析而产生焦虑。</span></div>`;
+  document.getElementById('warnings').innerHTML=wh;
+}
+
+function restart(){cur=0;ans={};showScr('welcome');document.getElementById('progressFill').style.width='0%';document.getElementById('progressText').textContent='准备开始';document.getElementById('progressCount').textContent='0 / 35'}
+
+function showAll(){
+  showScr('alltypes');
+  const g=document.getElementById('allGrid'); g.innerHTML='';
+  const rm={low:'green',medium:'yellow',high:'orange',critical:'red'};
+  Object.entries(types).forEach(([c,i])=>{
+    const e=document.createElement('div'); e.className='ty-card';
+    e.innerHTML=`<div class="code">${c}<span class="tdot ${rm[i.r]}"></span></div><div class="cname">${i.n} · ${i.rl}</div>`;
+    e.onclick=()=>{
+      document.getElementById('rCode').textContent=c;
+      document.getElementById('rName').textContent=i.n;
+      const re=document.getElementById('rRisk'); re.textContent=i.rl; re.className='res-risk '+i.r;
+      document.getElementById('resDesc').innerHTML=`<h3>关于 ${c} — ${i.n}</h3><p>${i.d}</p>`;
+      showScr('result');
+    };
+    g.appendChild(e);
+  });
+}
+</script>
+</body>
+</html>
