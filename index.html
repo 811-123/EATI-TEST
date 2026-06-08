@@ -192,6 +192,36 @@
   .rating-btn.selected .num { color: var(--rose); }
   .rating-btn.selected .label { color: var(--rose); }
 
+  /* Navigation */
+  .nav-btns {
+    display: flex; gap: 10px; margin-top: 24px; justify-content: center;
+  }
+  .btn-nav {
+    flex: 1; max-width: 180px;
+    padding: 14px 20px; border: none; border-radius: 14px;
+    font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16,1,0.3,1);
+    background: rgba(0,0,0,0.03);
+    color: var(--text-soft);
+    border: 1.5px solid var(--border);
+  }
+  .btn-nav:hover:not(:disabled) {
+    background: rgba(212,165,165,0.08);
+    border-color: var(--rose-light);
+    transform: translateY(-1px);
+  }
+  .btn-nav:disabled {
+    opacity: 0.3; cursor: not-allowed; transform: none;
+  }
+  .btn-nav.primary {
+    background: linear-gradient(135deg, var(--rose), var(--clay));
+    color: #fff; border: none;
+  }
+  .btn-nav.primary:hover:not(:disabled) {
+    box-shadow: 0 4px 16px rgba(212,165,165,0.35);
+    transform: translateY(-1px);
+  }
+
   /* Results */
   .res-head { text-align:center; margin-bottom:20px; }
   .res-code {
@@ -331,6 +361,10 @@
   <div class="q-num" id="qNum"></div>
   <div class="q-text" id="qText"></div>
   <div class="rating-group" id="ratingGroup"></div>
+  <div class="nav-btns" id="navBtns">
+    <button class="btn btn-nav" id="prevBtn" onclick="prevQ()">← 上一题</button>
+    <button class="btn btn-nav" id="nextBtn" onclick="nextQ()">下一题 →</button>
+  </div>
 </div>
 
 <!-- ===== RESULT ===== -->
@@ -457,12 +491,54 @@ function render(){
       b.onclick=()=>{
         document.querySelectorAll('.rating-btn').forEach(x=>x.classList.remove('selected'));
         b.classList.add('selected'); ans[q.id]=i;
-        setTimeout(nextStep,350);
+        updateNav();
       };
       c.appendChild(b);
     }
+    updateNav();
     showScr('question');
   }
+}
+
+function updateNav(){
+  const qSteps=steps.filter(x=>x.t==='q');
+  const curQIdx=qSteps.indexOf(steps[cur]);
+  const prevBtn=document.getElementById('prevBtn');
+  const nextBtn=document.getElementById('nextBtn');
+  prevBtn.disabled=curQIdx<=0;
+
+  const q=steps[cur].t==='q'?sections[steps[cur].si].qs[steps[cur].qi]:null;
+  const hasAns=q?ans[q.id]!==undefined:false;
+  if(curQIdx>=qSteps.length-1){
+    nextBtn.textContent=hasAns?'查看结果 →':'完成';
+    nextBtn.className='btn-nav primary';
+    nextBtn.disabled=!hasAns;
+  }else{
+    nextBtn.textContent='下一题 →';
+    nextBtn.className='btn-nav'+(hasAns?' primary':'');
+    nextBtn.disabled=!hasAns;
+  }
+}
+
+function prevQ(){
+  const qSteps=steps.filter(x=>x.t==='q');
+  const curQIdx=qSteps.indexOf(steps[cur]);
+  if(curQIdx<=0)return;
+  const targetStep=steps.indexOf(qSteps[curQIdx-1]);
+  cur=targetStep;
+  render();
+}
+
+function nextQ(){
+  const qSteps=steps.filter(x=>x.t==='q');
+  const curQIdx=qSteps.indexOf(steps[cur]);
+  const q=qSteps[curQIdx];
+  const qi=sections[q.si].qs[q.qi];
+  if(ans[qi.id]===undefined)return;
+  if(curQIdx>=qSteps.length-1){showRes();return;}
+  const targetStep=steps.indexOf(qSteps[curQIdx+1]);
+  cur=targetStep;
+  render();
 }
 
 function showScr(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
