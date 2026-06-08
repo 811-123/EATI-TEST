@@ -347,17 +347,7 @@
   <button class="btn btn-primary" onclick="nextStep()">开始测试 →</button>
 </div>
 
-<!-- ===== SECTION / QUESTION (dynamic) ===== -->
-<div class="screen" id="section">
-  <div class="sec-card">
-    <div class="emoji-big" id="secEmoji"></div>
-    <h2 id="secTitle"></h2>
-    <p class="tagline" id="secTagline"></p>
-    <button class="btn btn-primary" onclick="nextStep()" style="max-width:280px;margin:0 auto">继续 →</button>
-  </div>
-</div>
-
-<div class="screen" id="question">
+<!-- ===== QUESTION (dynamic) ===== -->
   <div class="q-num" id="qNum"></div>
   <div class="q-text" id="qText"></div>
   <div class="rating-group" id="ratingGroup"></div>
@@ -452,64 +442,66 @@ const sections = [
     ]}
 ];
 
-// Build step sequence
+// Build shuffled step sequence (no section pages)
 let steps = [];
-sections.forEach((s,si)=>{steps.push({t:'sec',i:si}); s.qs.forEach((q,qi)=>{steps.push({t:'q',si,qi});});});
+function buildSteps(){
+  // Flatten all questions
+  const allQs = [];
+  sections.forEach(s => {
+    s.qs.forEach(q => { allQs.push({...q}); });
+  });
+  // Fisher-Yates shuffle
+  for(let i=allQs.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [allQs[i],allQs[j]]=[allQs[j],allQs[i]];
+  }
+  steps = allQs.map(q => ({t:'q', q}));
+}
+buildSteps();
 let cur=0, ans={};
 
 function nextStep(){
-  cur++;
-  if(cur>=steps.length){showRes();return;}
+  cur=0;
   render();
 }
 
 function render(){
   const s=steps[cur];
-  const tot=steps.filter(x=>x.t==='q').length;
-  const done=steps.slice(0,cur).filter(x=>x.t==='q').length;
+  const tot=steps.length;
+  const done=cur;
   document.getElementById('progressFill').style.width=(done/tot*100)+'%';
   document.getElementById('progressText').textContent=done<tot?`进度 ${done}/${tot}`:'完成！';
   document.getElementById('progressCount').textContent=`${done} / ${tot}`;
 
-  if(s.t==='sec'){
-    const sec=sections[s.i];
-    document.getElementById('secEmoji').textContent=sec.emoji;
-    document.getElementById('secTitle').textContent=sec.title;
-    document.getElementById('secTagline').textContent=sec.tagline;
-    showScr('section');
-  }else{
-    const q=sections[s.si].qs[s.qi];
-    const idx=steps.filter(x=>x.t==='q').indexOf(s)+1;
-    document.getElementById('qNum').textContent=`问题 ${idx} / ${tot}`;
-    document.getElementById('qText').textContent=q.t;
-    const c=document.getElementById('ratingGroup'); c.innerHTML='';
-    const sel=ans[q.id];
-    for(let i=1;i<=5;i++){
-      const b=document.createElement('button');
-      b.className='rating-btn'+(sel===i?' selected':'');
-      b.innerHTML=`<span class="num">${i}</span><span class="label">${labels[i-1]}</span>`;
-      b.onclick=()=>{
-        document.querySelectorAll('.rating-btn').forEach(x=>x.classList.remove('selected'));
-        b.classList.add('selected'); ans[q.id]=i;
-        updateNav();
-      };
-      c.appendChild(b);
-    }
-    updateNav();
-    showScr('question');
+  const q = s.q;
+  const idx = cur + 1;
+  document.getElementById('qNum').textContent=`问题 ${idx} / ${tot}`;
+  document.getElementById('qText').textContent=q.t;
+  const c=document.getElementById('ratingGroup'); c.innerHTML='';
+  const sel=ans[q.id];
+  for(let i=1;i<=5;i++){
+    const b=document.createElement('button');
+    b.className='rating-btn'+(sel===i?' selected':'');
+    b.innerHTML=`<span class="num">${i}</span><span class="label">${labels[i-1]}</span>`;
+    b.onclick=()=>{
+      document.querySelectorAll('.rating-btn').forEach(x=>x.classList.remove('selected'));
+      b.classList.add('selected'); ans[q.id]=i;
+      updateNav();
+    };
+    c.appendChild(b);
   }
+  updateNav();
+  showScr('question');
 }
 
 function updateNav(){
-  const qSteps=steps.filter(x=>x.t==='q');
-  const curQIdx=qSteps.indexOf(steps[cur]);
   const prevBtn=document.getElementById('prevBtn');
   const nextBtn=document.getElementById('nextBtn');
-  prevBtn.disabled=curQIdx<=0;
+  prevBtn.disabled=cur<=0;
 
-  const q=steps[cur].t==='q'?sections[steps[cur].si].qs[steps[cur].qi]:null;
+  const q=steps[cur].q;
   const hasAns=q?ans[q.id]!==undefined:false;
-  if(curQIdx>=qSteps.length-1){
+  if(cur>=steps.length-1){
     nextBtn.textContent=hasAns?'查看结果 →':'完成';
     nextBtn.className='btn-nav primary';
     nextBtn.disabled=!hasAns;
@@ -521,23 +513,16 @@ function updateNav(){
 }
 
 function prevQ(){
-  const qSteps=steps.filter(x=>x.t==='q');
-  const curQIdx=qSteps.indexOf(steps[cur]);
-  if(curQIdx<=0)return;
-  const targetStep=steps.indexOf(qSteps[curQIdx-1]);
-  cur=targetStep;
+  if(cur<=0)return;
+  cur--;
   render();
 }
 
 function nextQ(){
-  const qSteps=steps.filter(x=>x.t==='q');
-  const curQIdx=qSteps.indexOf(steps[cur]);
-  const q=qSteps[curQIdx];
-  const qi=sections[q.si].qs[q.qi];
-  if(ans[qi.id]===undefined)return;
-  if(curQIdx>=qSteps.length-1){showRes();return;}
-  const targetStep=steps.indexOf(qSteps[curQIdx+1]);
-  cur=targetStep;
+  const q=steps[cur].q;
+  if(ans[q.id]===undefined)return;
+  if(cur>=steps.length-1){showRes();return;}
+  cur++;
   render();
 }
 
@@ -565,7 +550,7 @@ const types={
 
 function showRes(){
   showScr('result');
-  const tot=steps.filter(x=>x.t==='q').length;
+  const tot=steps.length;
   document.getElementById('progressFill').style.width='100%';
   document.getElementById('progressText').textContent='完成！';
   document.getElementById('progressCount').textContent=`${tot} / ${tot}`;
@@ -608,7 +593,7 @@ function showRes(){
   document.getElementById('warnings').innerHTML=wh;
 }
 
-function restart(){cur=0;ans={};showScr('welcome');document.getElementById('progressFill').style.width='0%';document.getElementById('progressText').textContent='准备开始';document.getElementById('progressCount').textContent='0 / 35'}
+function restart(){cur=0;ans={};buildSteps();showScr('welcome');document.getElementById('progressFill').style.width='0%';document.getElementById('progressText').textContent='准备开始';document.getElementById('progressCount').textContent='0 / 35'}
 
 function showAll(){
   showScr('alltypes');
