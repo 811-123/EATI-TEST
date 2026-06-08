@@ -348,12 +348,13 @@
 </div>
 
 <!-- ===== QUESTION (dynamic) ===== -->
+<div class="screen" id="question">
   <div class="q-num" id="qNum"></div>
   <div class="q-text" id="qText"></div>
   <div class="rating-group" id="ratingGroup"></div>
   <div class="nav-btns" id="navBtns">
     <button class="btn btn-nav" id="prevBtn" onclick="prevQ()">← 上一题</button>
-    <button class="btn btn-nav" id="nextBtn" onclick="nextQ()">下一题 →</button>
+    <button class="btn btn-nav primary" id="nextBtn" onclick="nextQ()">下一题 →</button>
   </div>
 </div>
 
@@ -498,17 +499,12 @@ function updateNav(){
   const prevBtn=document.getElementById('prevBtn');
   const nextBtn=document.getElementById('nextBtn');
   prevBtn.disabled=cur<=0;
-
-  const q=steps[cur].q;
-  const hasAns=q?ans[q.id]!==undefined:false;
+  nextBtn.disabled=false;
+  nextBtn.className='btn-nav primary';
   if(cur>=steps.length-1){
-    nextBtn.textContent=hasAns?'查看结果 →':'完成';
-    nextBtn.className='btn-nav primary';
-    nextBtn.disabled=!hasAns;
+    nextBtn.textContent='查看结果 →';
   }else{
     nextBtn.textContent='下一题 →';
-    nextBtn.className='btn-nav'+(hasAns?' primary':'');
-    nextBtn.disabled=!hasAns;
   }
 }
 
@@ -519,8 +515,6 @@ function prevQ(){
 }
 
 function nextQ(){
-  const q=steps[cur].q;
-  if(ans[q.id]===undefined)return;
   if(cur>=steps.length-1){showRes();return;}
   cur++;
   render();
